@@ -1,0 +1,10 @@
+.env
+.DS_Store
+.pytest_cache
+.ropeproject
+*.pyc
+.python-version
+.env_vars
+.eggs
+spongeblob.egg-info
+.tox
