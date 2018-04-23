@@ -1,7 +1,13 @@
-import spongeblob as sb
-import azure
-import pytest
 import os
+import socket
+
+import spongeblob as sb
+import pytest
+import boto3
+from azure.storage.blob import BlockBlobService
+from azure.common import AzureMissingResourceHttpError
+
+test_with_docker = True
 
 test_providers = ('s3', 'wabs')
 test_prefix = 'pytest_spongeblob'
@@ -16,24 +22,58 @@ test_env_keys = ['WABS_ACCOUNT_NAME',
                  'S3_AWS_SECRET',
                  'S3_BUCKET_NAME']
 
-for env_key in test_env_keys:
-    provider, key = env_key.split('_', 1)
+
+def is_open(ip, port):
+    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
-        test_creds[provider.lower()][key.lower()] = os.environ[env_key]
-    except KeyError:
-        raise KeyError('Define Environment Key {0} for testing'
-                       .format(env_key))
+        s.connect((ip, int(port)))
+        s.shutdown(2)
+        return True
+    except (socket.error, socket.timeout):
+        return False
+
+
+if test_with_docker:
+    test_creds['s3'] = {'aws_key': 'test',
+                        'aws_secret': 'test',
+                        'bucket_name': 'test'}
+    test_creds['wabs'] = {'account_name': 'devstoreaccount1',
+                          'container_name': 'test',
+                          'sas_token': 'test'}
+else:
+    for env_key in test_env_keys:
+        provider, key = env_key.split('_', 1)
+        try:
+            test_creds[provider.lower()][key.lower()] = os.environ[env_key]
+        except KeyError:
+            raise KeyError('Define Environment Key {0} for testing'
+                           .format(env_key))
 
 
 def teardown_module():
-    for test_provider in test_providers:
-        storage_obj = sb.setup_storage(test_provider,
-                                       **test_creds[test_provider])
-        try:
-            storage_obj.delete_key(test_file1)
-            storage_obj.delete_key(test_file2)
-        except azure.common.AzureMissingResourceHttpError:
-            pass
+    if not test_with_docker:
+        for test_provider in test_providers:
+            storage_obj = sb.setup_storage(test_provider,
+                                           **test_creds[test_provider])
+            try:
+                storage_obj.delete_key(test_file1)
+                storage_obj.delete_key(test_file2)
+            except AzureMissingResourceHttpError:
+                pass
+
+@pytest.fixture(scope='session')
+def blob_services(docker_ip, docker_services):
+    service_ports = {provider: docker_services.port_for(provider, port)
+                     for provider, port in (('s3', 8000), ('wabs', 10000))}
+
+    for provider, port in service_ports.items():
+        docker_services.wait_until_responsive(
+            timeout=30.0, pause=0.1,
+            check=lambda: is_open(docker_ip, port))
+
+    urls = {provider: "http://{0}:{1}".format(docker_ip, port)
+            for provider, port in service_ports.items()}
+    return urls
 
 
 @pytest.fixture(scope='function')
@@ -49,44 +89,64 @@ def download_file(tmpdir_factory):
     return str(f)
 
 
-@pytest.mark.parametrize("test_provider", test_providers)
-def test_list_objects_key(test_provider):
-    storage_obj = sb.setup_storage(test_provider, **test_creds[test_provider])
-    assert storage_obj.list_object_keys(test_prefix) == []
+@pytest.fixture(scope='session')
+def storage_clients(blob_services):
+    clients = {provider: sb.setup_storage(provider, **test_creds[provider])
+               for provider in test_providers}
+
+    if test_with_docker:
+        if 's3' in test_providers:
+            clients['s3'].client = boto3.client('s3',
+                                                aws_access_key_id=test_creds['s3']['aws_key'],
+                                                aws_secret_access_key=test_creds['s3']['aws_secret'],
+                                                endpoint_url=blob_services['s3'])
+            clients['s3'].client.create_bucket(Bucket=test_creds['s3']['bucket_name'])
+        if 'wabs' in test_providers:
+            clients['wabs'].client = BlockBlobService(account_name=test_creds['wabs']['account_name'],
+                                                      sas_token=test_creds['wabs']['sas_token'],
+                                                      is_emulated=True)
+            clients['wabs'].client.create_container(test_creds['wabs']['container_name'])
+    return clients
 
 
 @pytest.mark.parametrize("test_provider", test_providers)
-def test_upload_file(test_provider, upload_file):
-    storage_obj = sb.setup_storage(test_provider, **test_creds[test_provider])
-    storage_obj.upload_file(test_file1, upload_file)
-    assert storage_obj.list_object_keys(test_file1)[0]['key'] == test_file1
+def test_list_objects_key(test_provider, storage_clients):
+    storage_client = storage_clients[test_provider]
+    assert storage_client.list_object_keys(test_prefix) == []
 
 
 @pytest.mark.parametrize("test_provider", test_providers)
-def test_copy_from_key(test_provider):
-    storage_obj = sb.setup_storage(test_provider, **test_creds[test_provider])
-    storage_obj.copy_from_key(test_file1, test_file2)
-    assert storage_obj.list_object_keys(test_file2)[0]['key'] == test_file2
+def test_upload_file(test_provider, upload_file, storage_clients):
+    storage_client = storage_clients[test_provider]
+    storage_client.upload_file(test_file1, upload_file)
+    assert storage_client.list_object_keys(test_file1)[0]['key'] == test_file1
 
 
 @pytest.mark.parametrize("test_provider", test_providers)
-def test_delete_key(test_provider):
-    storage_obj = sb.setup_storage(test_provider, **test_creds[test_provider])
-    storage_obj.delete_key(test_file1)
-    assert storage_obj.list_object_keys(test_file1) == []
+def test_copy_from_key(test_provider, storage_clients):
+    storage_client = storage_clients[test_provider]
+    storage_client.copy_from_key(test_file1, test_file2)
+    assert storage_client.list_object_keys(test_file2)[0]['key'] == test_file2
 
 
 @pytest.mark.parametrize("test_provider", test_providers)
-def test_download_file(test_provider, download_file):
-    storage_obj = sb.setup_storage(test_provider, **test_creds[test_provider])
-    storage_obj.download_file(test_file2, download_file)
+def test_delete_key(test_provider, storage_clients):
+    storage_client = storage_clients[test_provider]
+    storage_client.delete_key(test_file1)
+    assert storage_client.list_object_keys(test_file1) == []
+
+
+@pytest.mark.parametrize("test_provider", test_providers)
+def test_download_file(test_provider, download_file, storage_clients):
+    storage_client = storage_clients[test_provider]
+    storage_client.download_file(test_file2, download_file)
     with open(download_file, 'r') as f:
         assert f.read() == test_filecontents
-    storage_obj.delete_key(test_file2)
-    assert storage_obj.list_object_keys(test_file2) == []
+    storage_client.delete_key(test_file2)
+    assert storage_client.list_object_keys(test_file2) == []
 
 
 @pytest.mark.parametrize("test_provider", test_providers)
-def test_list_objects_keys_again(test_provider):
-    storage_obj = sb.setup_storage(test_provider, **test_creds[test_provider])
-    assert storage_obj.list_object_keys(test_prefix) == []
+def test_list_objects_keys_again(test_provider, storage_clients):
+    storage_client = storage_clients[test_provider]
+    assert storage_client.list_object_keys(test_prefix) == []
