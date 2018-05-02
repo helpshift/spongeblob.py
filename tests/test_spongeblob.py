@@ -118,7 +118,7 @@ def test_list_objects_key(test_provider, storage_clients):
 @pytest.mark.parametrize("test_provider", test_providers)
 def test_upload_file(test_provider, upload_file, storage_clients):
     storage_client = storage_clients[test_provider]
-    storage_client.upload_file(test_file1, upload_file)
+    storage_client.upload_file(test_file1, upload_file, metadata={"key1": "metadata1"})
     assert storage_client.list_object_keys(test_file1)[0]['key'] == test_file1
 
 

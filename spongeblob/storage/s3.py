@@ -12,7 +12,7 @@ class S3(Storage):
     def __init__(self, aws_key, aws_secret, bucket_name):
         self.bucket_name = bucket_name
         config = Config(connect_timeout=60, read_timeout=60)
-        self.extra_args = {'ServerSideEncryption': 'AES256'}
+        self.default_extra_args = {'ServerSideEncryption': 'AES256'}
         self.client = boto3.client('s3',
                                    aws_access_key_id=aws_key,
                                    aws_secret_access_key=aws_secret,
@@ -26,6 +26,12 @@ class S3(Storage):
                     boto3.exceptions.S3UploadFailedError)
         else:
             return (EndpointConnectionError)
+
+    def make_extra_args(self, metadata={}):
+        extra_args = self.default_extra_args.copy()
+        if metadata:
+            extra_args.update({"Metadata": metadata})
+        return extra_args
 
     def get_url_prefix(self):
         return '{}/{}/'.format(self.client.meta.endpoint_url, self.bucket_name)
@@ -45,32 +51,35 @@ class S3(Storage):
                                   source_key,
                                   destination_file)
 
-    def upload_file(self, destination_key, source_file):
+    def upload_file(self, destination_key, source_file, metadata={}):
         logger.debug("Uploading file {0} to prefix {1}"
                      .format(source_file, destination_key))
+
         self.client.upload_file(
                         source_file,
                         self.bucket_name,
                         destination_key,
-                        ExtraArgs=self.extra_args)
+                        ExtraArgs=self.make_extra_args(metadata))
 
-    def upload_file_obj(self, destination_key, source_fd):
+    def upload_file_obj(self, destination_key, source_fd, metadata={}):
         logger.debug("Uploading stream {0} to prefix {1}"
                      .format(source_fd, destination_key))
+
         self.client.upload_fileobj(
                         source_fd,
                         self.bucket_name,
                         destination_key,
-                        ExtraArgs=self.extra_args)
+                        ExtraArgs=self.make_extra_args(metadata))
 
-    def copy_from_key(self, source_key, destination_key):
+    def copy_from_key(self, source_key, destination_key, metadata={}):
         logger.debug("Copying key {0} -> {1}"
                      .format(source_key, destination_key))
+
         self.client.copy(CopySource={'Bucket': self.bucket_name,
                                      'Key': source_key},
                          Bucket=self.bucket_name,
                          Key=destination_key,
-                         ExtraArgs=self.extra_args)
+                         ExtraArgs=self.make_extra_args(metadata))
 
     def delete_key(self, destination_key):
         logger.debug("Deleting key {0}".format(destination_key))

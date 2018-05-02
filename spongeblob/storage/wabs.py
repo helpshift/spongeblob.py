@@ -39,18 +39,19 @@ class WABS(Storage):
         self.client.get_blob_to_path(self.container_name, source_key,
                                      destination_file)
 
-    def upload_file(self, destination_key, source_file):
+    def upload_file(self, destination_key, source_file, metadata={}):
         logger.debug("Uploading file {0} to prefix {1}"
                      .format(source_file, destination_key))
         self.client.create_blob_from_path(self.container_name, destination_key,
-                                          source_file)
+                                          source_file, metadata=metadata)
 
-    def upload_file_obj(self,  destination_key, source_fd):
+    def upload_file_obj(self,  destination_key, source_fd, metadata={}):
         self.client.create_blob_from_stream(self.container_name,
                                             destination_key,
-                                            source_fd)
+                                            source_fd,
+                                            metadata=metadata)
 
-    def copy_from_key(self, source_key, destination_key):
+    def copy_from_key(self, source_key, destination_key, metadata={}):
         logger.debug("Copying key {0} -> {1}"
                      .format(source_key, destination_key))
 
@@ -75,7 +76,8 @@ class WABS(Storage):
                                                sas_token=self.sas_token)
         copy_properties = self.client.copy_blob(self.container_name,
                                                 destination_key,
-                                                source_uri)
+                                                source_uri,
+                                                metadata=metadata)
         # Wait for the copy to be a success
         while copy_properties.status == 'pending':
             # Wait a second before retrying
