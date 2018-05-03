@@ -4,7 +4,7 @@ class Storage(object):
     def get_retriable_exceptions(cls, method_name=None):
         return ()
 
-    def list_object_keys(self, prefix=''):
+    def list_object_keys(self, prefix='', metadata=False):
         raise NotImplementedError
 
     def download_file(self, source_key, destination_file):

@@ -4,6 +4,7 @@ import logging
 from .storage import Storage
 from azure.common import AzureConflictHttpError, AzureException
 from azure.storage.blob import BlockBlobService
+from azure.storage.blob.models import Include
 
 logger = logging.getLogger(__name__)
 
@@ -29,18 +30,20 @@ class WABS(Storage):
                                     self.client.primary_endpoint,
                                     self.container_name)
 
-    def list_object_keys(self, prefix=''):
+    def list_object_keys(self, prefix='', metadata=False):
         logger.debug("Listing files for prefix: {0}".format(prefix))
+        include = Include(metadata=metadata)
         marker = None
         while True:
             objects = self.client.list_blobs(self.container_name,
                                              prefix=prefix,
-                                             num_results=1000,
+                                             include=include,
                                              marker=marker)
             for obj in objects:
                 yield {'key': obj.name,
                        'last_modified': obj.properties.last_modified,
-                       'size': obj.properties.content_length}
+                       'size': obj.properties.content_length,
+                       'metadata': obj.metadata}
 
             if not objects.next_marker:
                 raise StopIteration

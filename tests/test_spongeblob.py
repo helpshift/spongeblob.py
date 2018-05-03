@@ -122,7 +122,16 @@ def test_upload_file(test_provider, upload_file, storage_clients):
     storage_client.upload_file(test_file1, upload_file,
                                metadata={"key1": "metadata1"})
     assert storage_client.list_object_keys(test_file1).next()['key'] == test_file1
+    assert storage_client.list_object_keys(test_file1).next()['metadata'] is None
 
+
+@pytest.mark.parametrize("test_provider", test_providers)
+def test_uploaded_file_metadata(test_provider, upload_file, storage_clients):
+    storage_client = storage_clients[test_provider]
+    storage_client.upload_file(test_file1, upload_file,
+                               metadata={"key1": "metadata1"})
+    obj_data = storage_client.list_object_keys(test_file1, metadata=True).next()
+    assert obj_data['metadata']['key1'] == 'metadata1'
 
 @pytest.mark.parametrize("test_provider", test_providers)
 def test_copy_from_key(test_provider, storage_clients):

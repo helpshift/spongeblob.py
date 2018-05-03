@@ -36,17 +36,23 @@ class S3(Storage):
     def get_url_prefix(self):
         return '{}/{}/'.format(self.client.meta.endpoint_url, self.bucket_name)
 
-    def list_object_keys(self, prefix=''):
+    def list_object_keys(self, prefix='', metadata=False):
         logger.debug("Listing files for prefix: {0}".format(prefix))
 
         paginator = self.client.get_paginator('list_objects')
         for page in paginator.paginate(Bucket=self.bucket_name, Prefix=prefix,
                                        PaginationConfig={'PageSize': 1000}):
             for obj in page.get('Contents', []):
+                obj_metadata = None
+                if metadata:
+                    obj_metadata = self.client.head_object(
+                        Bucket=self.bucket_name,
+                        Key=obj['Key'])['Metadata']
+
                 yield {'key': obj['Key'],
                        'last_modified': obj['LastModified'],
-                       'size': obj['Size']}
-
+                       'size': obj['Size'],
+                       'metadata': obj_metadata}
 
     def download_file(self, source_key, destination_file):
         logger.debug("Downloading blob from prefix {0} to file {1}"
