@@ -113,7 +113,7 @@ def storage_clients(blob_services):
 @pytest.mark.xfail(raises=StopIteration)
 def test_list_objects_key(test_provider, storage_clients):
     storage_client = storage_clients[test_provider]
-    storage_client.list_object_keys(test_prefix).next()
+    next(storage_client.list_object_keys(test_prefix))
 
 
 @pytest.mark.parametrize("test_provider", test_providers)
@@ -121,8 +121,8 @@ def test_upload_file(test_provider, upload_file, storage_clients):
     storage_client = storage_clients[test_provider]
     storage_client.upload_file(test_file1, upload_file,
                                metadata={"key1": "metadata1"})
-    assert storage_client.list_object_keys(test_file1).next()['key'] == test_file1
-    assert storage_client.list_object_keys(test_file1).next()['metadata'] is None
+    assert next(storage_client.list_object_keys(test_file1))['key'] == test_file1
+    assert next(storage_client.list_object_keys(test_file1))['metadata'] is None
 
 
 @pytest.mark.parametrize("test_provider", test_providers)
@@ -130,14 +130,14 @@ def test_uploaded_file_metadata(test_provider, upload_file, storage_clients):
     storage_client = storage_clients[test_provider]
     storage_client.upload_file(test_file1, upload_file,
                                metadata={"key1": "metadata1"})
-    obj_data = storage_client.list_object_keys(test_file1, metadata=True).next()
+    obj_data = next(storage_client.list_object_keys(test_file1, metadata=True))
     assert obj_data['metadata']['key1'] == 'metadata1'
 
 @pytest.mark.parametrize("test_provider", test_providers)
 def test_copy_from_key(test_provider, storage_clients):
     storage_client = storage_clients[test_provider]
     storage_client.copy_from_key(test_file1, test_file2)
-    assert storage_client.list_object_keys(test_file2).next()['key'] == test_file2
+    assert next(storage_client.list_object_keys(test_file2))['key'] == test_file2
 
 
 # following test passes but doesn't work correctly for paginators with fakes3, but works on s3
@@ -152,7 +152,7 @@ def test_pagination(test_provider, storage_clients):
 def test_delete_key_test1(test_provider, storage_clients):
     storage_client = storage_clients[test_provider]
     storage_client.delete_key(test_file1)
-    storage_client.list_object_keys(test_file1).next()
+    next(storage_client.list_object_keys(test_file1))
 
 
 @pytest.mark.parametrize("test_provider", test_providers)
@@ -168,11 +168,11 @@ def test_download_file(test_provider, download_file, storage_clients):
 def test_delete_key_test2(test_provider, storage_clients):
     storage_client = storage_clients[test_provider]
     storage_client.delete_key(test_file2)
-    storage_client.list_object_keys(test_file2).next()
+    next(storage_client.list_object_keys(test_file2))
 
 
 @pytest.mark.parametrize("test_provider", test_providers)
 @pytest.mark.xfail(raises=StopIteration)
 def test_list_objects_keys_again(test_provider, storage_clients):
     storage_client = storage_clients[test_provider]
-    storage_client.list_object_keys(test_prefix).next()
+    next(storage_client.list_object_keys(test_prefix))
