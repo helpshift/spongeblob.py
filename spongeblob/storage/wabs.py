@@ -30,13 +30,17 @@ class WABS(Storage):
                                     self.client.primary_endpoint,
                                     self.container_name)
 
-    def list_object_keys(self, prefix='', metadata=False):
+    def list_object_keys(self, prefix='', metadata=False, pagesize=1000):
         logger.debug("Listing files for prefix: {0}".format(prefix))
         include = Include(metadata=metadata)
         marker = None
         while True:
+            if marker:
+                logger.debug("Paging objects "
+                             "from marker '{0}'".format(marker))
             objects = self.client.list_blobs(self.container_name,
                                              prefix=prefix,
+                                             num_results=pagesize,
                                              include=include,
                                              marker=marker)
             for obj in objects:

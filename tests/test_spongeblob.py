@@ -140,6 +140,13 @@ def test_copy_from_key(test_provider, storage_clients):
     assert storage_client.list_object_keys(test_file2).next()['key'] == test_file2
 
 
+# following test passes but doesn't work correctly for paginators with fakes3, but works on s3
+@pytest.mark.parametrize("test_provider", test_providers)
+def test_pagination(test_provider, storage_clients):
+    storage_client = storage_clients[test_provider]
+    assert sum(1 for item in storage_client.list_object_keys(test_prefix, pagesize=1)) == 2
+
+
 @pytest.mark.parametrize("test_provider", test_providers)
 @pytest.mark.xfail(raises=StopIteration)
 def test_delete_key_test1(test_provider, storage_clients):
