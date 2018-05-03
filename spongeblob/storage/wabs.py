@@ -7,6 +7,7 @@ from azure.storage.blob import BlockBlobService
 
 logger = logging.getLogger(__name__)
 
+
 class WABS(Storage):
     def __init__(self, account_name, container_name, sas_token):
         self.sas_token = sas_token
@@ -30,11 +31,21 @@ class WABS(Storage):
 
     def list_object_keys(self, prefix=''):
         logger.debug("Listing files for prefix: {0}".format(prefix))
-        return [{'key': obj.name,
-                 'last_modified': obj.properties.last_modified,
-                 'size': obj.properties.content_length}
-                for obj in self.client.list_blobs(self.container_name,
-                                                  prefix=prefix)]
+        marker = None
+        while True:
+            objects = self.client.list_blobs(self.container_name,
+                                             prefix=prefix,
+                                             num_results=1000,
+                                             marker=marker)
+            for obj in objects:
+                yield {'key': obj.name,
+                       'last_modified': obj.properties.last_modified,
+                       'size': obj.properties.content_length}
+
+            if not objects.next_marker:
+                raise StopIteration
+            else:
+                marker = objects.next_marker
 
     def download_file(self, source_key, destination_file):
         self.client.get_blob_to_path(self.container_name, source_key,

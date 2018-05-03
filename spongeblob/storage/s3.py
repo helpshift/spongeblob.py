@@ -38,15 +38,16 @@ class S3(Storage):
 
     def list_object_keys(self, prefix=''):
         logger.debug("Listing files for prefix: {0}".format(prefix))
-        response = self.client.list_objects(Bucket=self.bucket_name,
-                                            Prefix=prefix)
-        response = response.get('Contents', [])
-        objects = [{'key': obj['Key'],
-                    'last_modified': obj['LastModified'],
-                    'size': obj['Size']}
-                   for obj in response]
 
-        return objects
+        paginator = self.client.get_paginator('list_objects')
+        for page in paginator.paginate(Bucket=self.bucket_name, Prefix=prefix,
+                                       PaginationConfig={'PageSize': 1000}):
+            for obj in page.get('Contents', []):
+                yield {'key': obj['Key'],
+                       'last_modified': obj['LastModified'],
+                       'size': obj['Size']}
+
+
     def download_file(self, source_key, destination_file):
         logger.debug("Downloading blob from prefix {0} to file {1}"
                      .format(source_key, destination_file))

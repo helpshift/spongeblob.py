@@ -110,30 +110,33 @@ def storage_clients(blob_services):
 
 
 @pytest.mark.parametrize("test_provider", test_providers)
+@pytest.mark.xfail(raises=StopIteration)
 def test_list_objects_key(test_provider, storage_clients):
     storage_client = storage_clients[test_provider]
-    assert storage_client.list_object_keys(test_prefix) == []
+    storage_client.list_object_keys(test_prefix).next()
 
 
 @pytest.mark.parametrize("test_provider", test_providers)
 def test_upload_file(test_provider, upload_file, storage_clients):
     storage_client = storage_clients[test_provider]
-    storage_client.upload_file(test_file1, upload_file, metadata={"key1": "metadata1"})
-    assert storage_client.list_object_keys(test_file1)[0]['key'] == test_file1
+    storage_client.upload_file(test_file1, upload_file,
+                               metadata={"key1": "metadata1"})
+    assert storage_client.list_object_keys(test_file1).next()['key'] == test_file1
 
 
 @pytest.mark.parametrize("test_provider", test_providers)
 def test_copy_from_key(test_provider, storage_clients):
     storage_client = storage_clients[test_provider]
     storage_client.copy_from_key(test_file1, test_file2)
-    assert storage_client.list_object_keys(test_file2)[0]['key'] == test_file2
+    assert storage_client.list_object_keys(test_file2).next()['key'] == test_file2
 
 
 @pytest.mark.parametrize("test_provider", test_providers)
-def test_delete_key(test_provider, storage_clients):
+@pytest.mark.xfail(raises=StopIteration)
+def test_delete_key_test1(test_provider, storage_clients):
     storage_client = storage_clients[test_provider]
     storage_client.delete_key(test_file1)
-    assert storage_client.list_object_keys(test_file1) == []
+    storage_client.list_object_keys(test_file1).next()
 
 
 @pytest.mark.parametrize("test_provider", test_providers)
@@ -142,11 +145,18 @@ def test_download_file(test_provider, download_file, storage_clients):
     storage_client.download_file(test_file2, download_file)
     with open(download_file, 'r') as f:
         assert f.read() == test_filecontents
-    storage_client.delete_key(test_file2)
-    assert storage_client.list_object_keys(test_file2) == []
 
 
 @pytest.mark.parametrize("test_provider", test_providers)
+@pytest.mark.xfail(raises=StopIteration)
+def test_delete_key_test2(test_provider, storage_clients):
+    storage_client = storage_clients[test_provider]
+    storage_client.delete_key(test_file2)
+    storage_client.list_object_keys(test_file2).next()
+
+
+@pytest.mark.parametrize("test_provider", test_providers)
+@pytest.mark.xfail(raises=StopIteration)
 def test_list_objects_keys_again(test_provider, storage_clients):
     storage_client = storage_clients[test_provider]
-    assert storage_client.list_object_keys(test_prefix) == []
+    storage_client.list_object_keys(test_prefix).next()
