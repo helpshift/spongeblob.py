@@ -31,7 +31,8 @@ class WABS(Storage):
     def list_object_keys(self, prefix=''):
         logger.debug("Listing files for prefix: {0}".format(prefix))
         return [{'key': obj.name,
-                 'last_modified': obj.properties.last_modified}
+                 'last_modified': obj.properties.last_modified,
+                 'size': obj.properties.content_length}
                 for obj in self.client.list_blobs(self.container_name,
                                                   prefix=prefix)]
 

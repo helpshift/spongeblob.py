@@ -41,9 +41,12 @@ class S3(Storage):
         response = self.client.list_objects(Bucket=self.bucket_name,
                                             Prefix=prefix)
         response = response.get('Contents', [])
-        return [{'key': obj['Key'], 'last_modified': obj['LastModified']}
-                for obj in response]
+        objects = [{'key': obj['Key'],
+                    'last_modified': obj['LastModified'],
+                    'size': obj['Size']}
+                   for obj in response]
 
+        return objects
     def download_file(self, source_key, destination_file):
         logger.debug("Downloading blob from prefix {0} to file {1}"
                      .format(source_key, destination_file))
