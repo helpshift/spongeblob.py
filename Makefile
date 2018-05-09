@@ -4,4 +4,4 @@ clean:
 	find . -name '*.pyc' -delete
 
 test:
-	tox
+	tox -r
