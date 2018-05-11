@@ -46,7 +46,7 @@ class S3(Storage):
         else:
             return (EndpointConnectionError)
 
-    def make_extra_args(self, metadata={}):
+    def _make_extra_args(self, metadata=None):
         """An internal utility function to generate extra args for Boto S3
         uploads. This copies the default `extra_args` class variable and adds
         any the metadata param if not empty.
@@ -56,10 +56,10 @@ class S3(Storage):
         :rtype: dict
 
         """
-        extra_args = self.default_extra_args.copy()
         if metadata:
-            extra_args.update({"Metadata": metadata})
-        return extra_args
+            return dict(self.default_extra_args, Metadata=metadata)
+        else:
+            return dict(self.default_extra_args)
 
     def get_url_prefix(self):
         """Returns a connection string for the client object
@@ -115,7 +115,7 @@ class S3(Storage):
                                   source_key,
                                   destination_file)
 
-    def upload_file(self, destination_key, source_file, metadata={}):
+    def upload_file(self, destination_key, source_file, metadata=None):
         """Upload a file from local filesystem to S3
 
         :param str destination_key: Key where to store object
@@ -125,6 +125,7 @@ class S3(Storage):
         :rtype: None
 
         """
+        metadata = metadata or {}
         logger.debug("Uploading file {0} to prefix {1}"
                      .format(source_file, destination_key))
 
@@ -132,9 +133,9 @@ class S3(Storage):
                         source_file,
                         self.bucket_name,
                         destination_key,
-                        ExtraArgs=self.make_extra_args(metadata))
+                        ExtraArgs=self._make_extra_args(metadata))
 
-    def upload_file_obj(self, destination_key, source_fd, metadata={}):
+    def upload_file_obj(self, destination_key, source_fd, metadata=None):
         """Upload a file from file object to S3
 
         :param str destination_key: Key where to store object
@@ -144,6 +145,7 @@ class S3(Storage):
         :rtype: None
 
         """
+        metadata = metadata or {}
         logger.debug("Uploading stream {0} to prefix {1}"
                      .format(source_fd, destination_key))
 
@@ -151,9 +153,9 @@ class S3(Storage):
                         source_fd,
                         self.bucket_name,
                         destination_key,
-                        ExtraArgs=self.make_extra_args(metadata))
+                        ExtraArgs=self._make_extra_args(metadata))
 
-    def copy_from_key(self, source_key, destination_key, metadata={}):
+    def copy_from_key(self, source_key, destination_key, metadata=None):
         """Copy a S3 object from one key to another key on server side
 
         :param str source_key: Source key for the object to be copied
@@ -163,6 +165,7 @@ class S3(Storage):
         :rtype: None
 
         """
+        metadata = metadata or {}
         logger.debug("Copying key {0} -> {1}"
                      .format(source_key, destination_key))
 
@@ -170,7 +173,7 @@ class S3(Storage):
                                      'Key': source_key},
                          Bucket=self.bucket_name,
                          Key=destination_key,
-                         ExtraArgs=self.make_extra_args(metadata))
+                         ExtraArgs=self._make_extra_args(metadata))
 
     def delete_key(self, destination_key):
         """Delete an object from S3

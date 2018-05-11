@@ -51,7 +51,7 @@ class Storage(object):
         """
         raise NotImplementedError
 
-    def upload_file(self, destination_key, source_file, metadata={}):
+    def upload_file(self, destination_key, source_file, metadata=None):
         """Upload a file from local filesystem
 
         :param str destination_key: Key where to store object
@@ -63,7 +63,7 @@ class Storage(object):
         """
         raise NotImplementedError
 
-    def upload_file_obj(self, destination_key, source_fd, metadata={}):
+    def upload_file_obj(self, destination_key, source_fd, metadata=None):
         """Upload a file from file object
 
         :param str destination_key: Key where to store object
@@ -75,7 +75,7 @@ class Storage(object):
         """
         raise NotImplementedError
 
-    def copy_from_key(self, source_key, destination_key, metadata={}):
+    def copy_from_key(self, source_key, destination_key, metadata=None):
         """Copy an object from one key to another key on server side
 
         :param str source_key: Source key for the object to be copied

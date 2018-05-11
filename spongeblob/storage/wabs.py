@@ -101,7 +101,7 @@ class WABS(Storage):
         self.client.get_blob_to_path(self.container_name, source_key,
                                      destination_file)
 
-    def upload_file(self, destination_key, source_file, metadata={}):
+    def upload_file(self, destination_key, source_file, metadata=None):
         """Upload a file from local filesystem to WABS
 
         :param str destination_key: Key where to store object
@@ -111,12 +111,13 @@ class WABS(Storage):
         :rtype: None
 
         """
+        metadata = metadata or {}
         logger.debug("Uploading file {0} to prefix {1}"
                      .format(source_file, destination_key))
         self.client.create_blob_from_path(self.container_name, destination_key,
                                           source_file, metadata=metadata)
 
-    def upload_file_obj(self,  destination_key, source_fd, metadata={}):
+    def upload_file_obj(self,  destination_key, source_fd, metadata=None):
         """Upload a file from file object to WABS
 
         :param str destination_key: Key where to store object
@@ -126,12 +127,13 @@ class WABS(Storage):
         :rtype: None
 
         """
+        metadata = metadata or {}
         self.client.create_blob_from_stream(self.container_name,
                                             destination_key,
                                             source_fd,
                                             metadata=metadata)
 
-    def copy_from_key(self, source_key, destination_key, metadata={}):
+    def copy_from_key(self, source_key, destination_key, metadata=None):
         """Copy a WABS object from one key to another key on server side
 
         :param str source_key: Source key for the object to be copied
@@ -141,6 +143,7 @@ class WABS(Storage):
         :rtype: None
 
         """
+        metadata = metadata or {}
         logger.debug("Copying key {0} -> {1}"
                      .format(source_key, destination_key))
 
