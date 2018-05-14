@@ -84,10 +84,10 @@ class WABS(Storage):
                        'size': obj.properties.content_length,
                        'metadata': obj.metadata}
 
-            if not objects.next_marker:
-                raise StopIteration
-            else:
+            if objects.next_marker:
                 marker = objects.next_marker
+            else:
+                break
 
     def download_file(self, source_key, destination_file):
         """Download a object from WABS container to local filesystem
