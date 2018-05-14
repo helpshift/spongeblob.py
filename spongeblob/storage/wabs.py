@@ -133,6 +133,8 @@ class WABS(Storage):
                                             source_fd,
                                             metadata=metadata)
 
+    # FIXME: Need to fix this function to abort, if another copy is already
+    # happening it should abort, or it should follow the ec2 behaviour
     def copy_from_key(self, source_key, destination_key, metadata=None):
         """Copy a WABS object from one key to another key on server side
 

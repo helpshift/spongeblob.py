@@ -10,9 +10,13 @@ This is a python library for wrapping s3 and wabs blob storage through a common 
 ### Cloud testing
 To test various cloud storages, setup following env variables and set `test_with_docker = False` in `tests/test_spongeblob.py` and run `make test`
 
-- WABS\_ACCOUNT\_NAME
-- WABS\_CONTAINER\_NAME
-- WABS\_SAS\_TOKEN
-- S3\_AWS\_KEY
-- S3\_AWS\_SECRET
-- S3\_BUCKET\_NAME
+- `WABS_ACCOUNT_NAME`
+- `WABS_CONTAINER_NAME`
+- `WABS_SAS_TOKEN`
+- `S3_AWS_KEY`
+- `S3_AWS_SECRET`
+- `S3_BUCKET_NAME`
+
+## Todo
+- [ ] Implement a `download_file_obj` similar to `upload_file_obj` function
+- [ ] Configurable `connect_timeout` and `read_timeout` for connections
