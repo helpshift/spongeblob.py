@@ -5,3 +5,6 @@ clean:
 
 test:
 	tox -r
+
+test_cloud:
+	tox -r -- --no-docker
