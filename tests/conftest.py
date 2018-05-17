@@ -67,6 +67,16 @@ def test_data(test_with_docker, test_providers):
     return test_data
 
 
+@pytest.fixture(scope='session')
+def docker_compose_file(pytestconfig, test_with_docker):
+    tests_dir = os.path.join(str(pytestconfig.rootdir), 'tests')
+    if test_with_docker:
+        docker_file = "docker-compose.yml"
+    else:
+        docker_file = "docker-dummy.yml"
+    return os.path.join(tests_dir, docker_file)
+
+
 def is_open(ip, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     try:
@@ -78,18 +88,21 @@ def is_open(ip, port):
 
 
 @pytest.fixture(scope='session')
-def blob_services(docker_ip, docker_services):
-    service_ports = {provider: docker_services.port_for(provider, port)
-                     for provider, port in (('s3', 8000), ('wabs', 10000))}
+def blob_services(docker_ip, docker_services, test_with_docker):
+    if test_with_docker:
+        service_ports = {provider: docker_services.port_for(provider, port)
+                         for provider, port in (('s3', 8000), ('wabs', 10000))}
 
-    for provider, port in service_ports.items():
-        docker_services.wait_until_responsive(
-            timeout=30.0, pause=0.1,
-            check=lambda: is_open(docker_ip, port))
+        for provider, port in service_ports.items():
+            docker_services.wait_until_responsive(
+                timeout=30.0, pause=0.1,
+                check=lambda: is_open(docker_ip, port))
 
-    urls = {provider: "http://{0}:{1}".format(docker_ip, port)
-            for provider, port in service_ports.items()}
-    return urls
+        urls = {provider: "http://{0}:{1}".format(docker_ip, port)
+                for provider, port in service_ports.items()}
+        return urls
+    else:
+        return {}
 
 
 @pytest.fixture(scope='function')
@@ -109,7 +122,7 @@ def download_file(tmpdir_factory, test_data):
 
 
 @pytest.fixture(scope='session')
-def lowlevel_storage_clients(blob_services, test_data):
+def lowlevel_storage_clients(blob_services, test_data, test_with_docker):
     clients = {}
     test_creds = test_data['creds']
     if test_with_docker:
