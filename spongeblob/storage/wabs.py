@@ -42,7 +42,9 @@ class WABS(Storage):
         :rtype: tuple
 
         """
-        return (AzureException)
+        if method_name == 'delete_key':
+            return ()
+        return (AzureException,)
 
     def get_url_prefix(self):
         """Returns a connection string for the client object
