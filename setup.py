@@ -1,7 +1,7 @@
 from setuptools import setup, find_packages
 
 setup(name='spongeblob',
-      version='0.0.1',
+      version='0.0.2',
       description='Spongeblob: A wrapper library for various cloud storage',
       url='',
       license='Proprietary',
