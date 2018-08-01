@@ -2,7 +2,6 @@ import logging
 
 from .storage import Storage
 import boto3
-from botocore.client import Config
 from botocore.exceptions import EndpointConnectionError
 from ssl import SSLError
 
@@ -15,21 +14,24 @@ class S3(Storage):
     Storage base class
     """
 
-    def __init__(self, aws_key, aws_secret, bucket_name):
+    def __init__(self, aws_key, aws_secret, bucket_name, boto_config=None):
         """Setup a S3 storage client object
 
         :param aws_key: AWS key for the S3 bucket
         :param aws_secret: AWS secret for the S3 bucket
         :param bucket_name: AWS S3 bucket name to connect to
+        :param boto_config: Expects a botocore.client.Config object for boto s3 client connection configuration
 
         """
         self.bucket_name = bucket_name
-        config = Config(connect_timeout=60, read_timeout=60)
         self.default_extra_args = {'ServerSideEncryption': 'AES256'}
+
+        # NOTE: default botocore config values will be used if boto_config
+        # is passed as `None`
         self.client = boto3.client('s3',
                                    aws_access_key_id=aws_key,
                                    aws_secret_access_key=aws_secret,
-                                   config=config)
+                                   config=boto_config)
         logger.debug("Created s3 client object: {0}".format(self.client))
 
     @classmethod
