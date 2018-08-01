@@ -4,6 +4,7 @@ from .storage import Storage
 import boto3
 from botocore.client import Config
 from botocore.exceptions import EndpointConnectionError
+from ssl import SSLError
 
 logger = logging.getLogger(__name__)
 
@@ -41,10 +42,12 @@ class S3(Storage):
 
         """
         if method_name.startswith('upload_file'):
-            return (EndpointConnectionError,
+            return (SSLError,
+                    EndpointConnectionError,
                     boto3.exceptions.S3UploadFailedError)
         else:
-            return (EndpointConnectionError)
+            return (SSLError,
+                    EndpointConnectionError)
 
     def _make_extra_args(self, metadata=None):
         """An internal utility function to generate extra args for Boto S3
