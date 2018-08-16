@@ -73,6 +73,24 @@ def test_pagination(test_data, test_provider, storage_clients):
                storage_client.list_object_keys(test_prefix, pagesize=1)) == 2
 
 
+def test_list_object_keys_flat(test_data, test_provider, storage_clients):
+    test_file1 = test_data['file1']
+    test_file2 = test_data['file2']
+    test_prefix = test_data['prefix']
+    storage_client = storage_clients[test_provider]
+    object_list = storage_client.list_object_keys_flat(test_prefix, pagesize=1,
+                                                       metadata=True)
+    assert isinstance(object_list, list)
+    assert len(object_list) is 2
+
+    key_list = [obj['key'] for obj in object_list]
+    assert test_file1 in key_list
+    assert test_file2 in key_list
+
+    assert object_list[0]['metadata']['key1'] == 'metadata1'
+    assert object_list[1]['metadata']['key1'] == 'metadata1'
+
+
 @pytest.mark.xfail(raises=StopIteration)
 def test_delete_key_test1(test_data, test_provider, storage_clients):
     test_file1 = test_data['file1']

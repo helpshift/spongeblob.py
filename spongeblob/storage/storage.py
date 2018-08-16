@@ -40,6 +40,31 @@ class Storage(object):
         """
         raise NotImplementedError
 
+    def list_object_keys_flat(self, *args, **kwargs):
+        """Takes arguments of list_object_keys function and returns a list of
+        objects instead of generator. This function is retriable unlike
+        list_object_keys.
+
+        WARN: Unlike list_object_keys, this function is not memory efficient,
+        and should be used for prefixes which do not return a huge number of
+        objects
+
+        :rtype: list[dict]
+
+        The returned dict will look like this
+        ``
+        [
+        {"key": "/key/for/object",
+         "size": <size_of_object_in_bytes>,
+         "last_modified": <last_modified_timestamp_in_cloud_storage>,
+         "metadata": Union(<metadata_dict_of_key>, None),
+        }, ...]
+        ``
+
+        """
+
+        return list(self.list_object_keys(*args, **kwargs))
+
     def download_file(self, source_key, destination_file):
         """Download an object to local filesystem
 

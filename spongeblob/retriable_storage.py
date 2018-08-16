@@ -19,6 +19,7 @@ class RetriableStorage:
     # from retry method list
     RETRIABLE_METHODS = set([
         "download_file",
+        "list_object_keys_flat",
         "upload_file",
         "upload_file_obj",
         "copy_from_key",
