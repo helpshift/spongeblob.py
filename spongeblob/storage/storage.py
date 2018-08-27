@@ -65,6 +65,34 @@ class Storage(object):
 
         return list(self.list_object_keys(*args, **kwargs))
 
+    def get_object_properties(self, key, metadata=False):
+        """Fetch object properties and optionally metadata as specified by the key. If
+        the object is not found return None.
+
+        :param str key: Key for object for which you want to fetch metdata and properties
+        :param bool metadata: If set to True, metadata will be fetched, else not.
+        :returns: A dictionary object with some basic properties and object metadata
+        :rtype: dict
+
+        The returned dict will look like this
+        ```
+        {"key": "/key/for/object",
+         "size": <size_of_object_in_bytes>,
+         "last_modified": <last_modified_timestamp_in_cloud_storage>,
+         "metadata": Union(<metadata_dict_of_key>, None),
+        }
+        ```
+
+        """
+        obj_properties = next(self.list_object_keys(key,
+                                                    metadata=metadata,
+                                                    pagesize=1), None)
+
+        if obj_properties is None or obj_properties['key'] != key:
+            return None
+        else:
+            return obj_properties
+
     def download_file(self, source_key, destination_file):
         """Download an object to local filesystem
 

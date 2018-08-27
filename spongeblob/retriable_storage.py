@@ -20,6 +20,7 @@ class RetriableStorage:
     RETRIABLE_METHODS = set([
         "download_file",
         "list_object_keys_flat",
+        "get_object_properties",
         "upload_file",
         "upload_file_obj",
         "copy_from_key",

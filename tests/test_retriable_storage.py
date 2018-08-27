@@ -91,6 +91,26 @@ def test_list_object_keys_flat(test_data, test_provider, storage_clients):
     assert object_list[1]['metadata']['key1'] == 'metadata1'
 
 
+def test_get_object_properties(test_data, test_provider, storage_clients):
+    test_file1 = test_data['file1']
+    test_file2 = test_data['file2']
+    test_prefix = test_data['prefix']
+    storage_client = storage_clients[test_provider]
+    test_object1 = storage_client.get_object_properties(test_file1,
+                                                        metadata=True)
+    test_object2 = storage_client.get_object_properties(test_file2,
+                                                        metadata=True)
+    test_bogus_object = storage_client.get_object_properties("bogus",
+                                                             metadata=True)
+    test_prefix_object = storage_client.get_object_properties(test_prefix,
+                                                              metadata=True)
+
+    assert test_object1['metadata']['key1'] == 'metadata1'
+    assert test_object2['metadata']['key1'] == 'metadata1'
+    assert test_bogus_object is None
+    assert test_prefix_object is None
+
+
 @pytest.mark.xfail(raises=StopIteration)
 def test_delete_key_test1(test_data, test_provider, storage_clients):
     test_file1 = test_data['file1']
