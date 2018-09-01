@@ -8,3 +8,5 @@
 .eggs
 spongeblob.egg-info
 .tox
+build
+dist
