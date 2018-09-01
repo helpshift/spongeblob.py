@@ -21,21 +21,19 @@ class Storage(object):
         :param str prefix: String to match when searching files
         :param bool metadata: If set to True, metadata will be fetched, else not.
         :param int pagesize: Limits the number of objects fetched in a single api call
-        :returns: A generator of dict describing objects found by api
+        :returns: A generator of dict describing objects found by api.
+                  The returned dict will look like this
+                  ::
+
+                      {"key": "/key/for/object",
+                       "size": <size_of_object_in_bytes>,
+                       "last_modified": <last_modified_timestamp_in_cloud_storage>,
+                       "metadata": Union(<metadata_dict_of_key>, None)}
+
+                  Metadata key in dict above will be set to ``None`` if metadata param is
+                  False, else metadata will be a dict if metadata is set to True, it will
+                  be empty dict if there is no metadata.
         :rtype: Iterator[dict]
-
-        The returned dict will look like this
-        ``
-        {"key": "/key/for/object",
-         "size": <size_of_object_in_bytes>,
-         "last_modified": <last_modified_timestamp_in_cloud_storage>,
-         "metadata": Union(<metadata_dict_of_key>, None),
-        }
-        ``
-
-        metadata key in dict above will be set to ``None`` if metadata param is
-        False, else metadata will be a dict if metadata is set to True, it will
-        be empty dict if there is no metadata.
 
         """
         raise NotImplementedError
@@ -49,18 +47,15 @@ class Storage(object):
         and should be used for prefixes which do not return a huge number of
         objects
 
+        :returns: A list of dict describing objects found by api. The returned dict will look like this
+                  ::
+
+                      [{"key": "/key/for/object",
+                       "size": <size_of_object_in_bytes>,
+                       "last_modified": <last_modified_timestamp_in_cloud_storage>,
+                       "metadata": Union(<metadata_dict_of_key>, None)}, ...]
+
         :rtype: list[dict]
-
-        The returned dict will look like this
-        ``
-        [
-        {"key": "/key/for/object",
-         "size": <size_of_object_in_bytes>,
-         "last_modified": <last_modified_timestamp_in_cloud_storage>,
-         "metadata": Union(<metadata_dict_of_key>, None),
-        }, ...]
-        ``
-
         """
 
         return list(self.list_object_keys(*args, **kwargs))
@@ -71,17 +66,16 @@ class Storage(object):
 
         :param str key: Key for object for which you want to fetch metdata and properties
         :param bool metadata: If set to True, metadata will be fetched, else not.
-        :returns: A dictionary object with some basic properties and object metadata
+        :returns: A dictionary object with some basic properties and object metadata.
+                  The returned dict will look like this:
+                  ::
+
+                      {"key": "/key/for/object",
+                       "size": <size_of_object_in_bytes>,
+                       "last_modified": <last_modified_timestamp_in_cloud_storage>,
+                       "metadata": Union(<metadata_dict_of_key>, None)}
         :rtype: dict
 
-        The returned dict will look like this
-        ```
-        {"key": "/key/for/object",
-         "size": <size_of_object_in_bytes>,
-         "last_modified": <last_modified_timestamp_in_cloud_storage>,
-         "metadata": Union(<metadata_dict_of_key>, None),
-        }
-        ```
 
         """
         obj_properties = next(self.list_object_keys(key,

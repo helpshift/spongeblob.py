@@ -17,10 +17,11 @@ class S3(Storage):
     def __init__(self, aws_key, aws_secret, bucket_name, boto_config=None):
         """Setup a S3 storage client object
 
-        :param aws_key: AWS key for the S3 bucket
-        :param aws_secret: AWS secret for the S3 bucket
-        :param bucket_name: AWS S3 bucket name to connect to
-        :param boto_config: Expects a botocore.client.Config object for boto s3 client connection configuration
+        :param str aws_key: AWS key for the S3 bucket
+        :param str aws_secret: AWS secret for the S3 bucket
+        :param str bucket_name: AWS S3 bucket name to connect to
+        :param botocore.client.Config boto_config: Expects a botocore.client.Config object
+                                                   for boto s3 client connection configuration
 
         """
         self.bucket_name = bucket_name

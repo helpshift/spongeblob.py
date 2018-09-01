@@ -30,15 +30,29 @@ class RetriableStorage:
                  max_attempts=3, wait_multiplier=2, max_wait_seconds=30,
                  *args, **kwargs):
         """Intitialize a storage service which retries for `max_attempts` with
-           exponential backoff after each attempt. After each attempt, backoff
-           time equals 2 ^ attempt_number * `wait_multiplier`. This value will
-           increase upto `max_wait_seconds`. Read tenacity docs for
-           `wait_exponential` function for more details
+        exponential backoff after each attempt. After each attempt, backoff
+        time equals 2 ^ `attempt_number` * `wait_multiplier`. This value will
+        increase upto `max_wait_seconds`. Read tenacity docs for
+        `wait_exponential` function for more details
 
         :param str provider: Any provider supported by spongeblob
         :param int max_attempts: Maximum retry attempts
         :param int wait_multiplier: Multiplier factor for wait_exponential backoff function
         :param int max_wait_seconds: Max wait time between attempts
+
+        :Example:
+            ::
+
+                from spongeblob.retriable_storage import RetriableStorage
+                s3 = RetriableStorage('s3',
+                                      aws_key='access_key_id',
+                                      aws_secret='access_key_secret',
+                                      bucket_name='testbucket')
+
+                wabs = RetriableStorage('wabs',
+                                        account_name='testaccount',
+                                        container_name='testcontainer',
+                                        sas_token='testtoken')
 
         """
         self._storage = sb.setup_storage(provider, *args, **kwargs)
